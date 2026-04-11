@@ -1,98 +1,204 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
+import { StyleSheet, View } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { AppShell } from "@/components/app-shell";
+import { ThemedText } from "@/components/themed-text";
+import { AppButton } from "@/components/ui/app-button";
+import { StatusPill } from "@/components/ui/status-pill";
+import { SurfacePanel } from "@/components/ui/surface-panel";
+import {
+  Colors,
+  Radii,
+  Spacing,
+  Typography,
+  withAlpha,
+} from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const theme = useColorScheme() ?? "light";
+  const palette = Colors[theme];
+  const router = useRouter();
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
+  return (
+    <AppShell
+      header={
+        <SurfacePanel style={styles.hero}>
+          <View style={styles.heroTopRow}>
+            <StatusPill label="Responder Mobile" tone="primary" />
+            <StatusPill label="Theme Synced" tone="accent" />
+          </View>
+
+          <View style={styles.heroTitleBlock}>
+            <ThemedText type="title" style={styles.heroTitle}>
+              PIDS AMS field shell
+            </ThemedText>
+            <ThemedText
+              lightColor={palette.mutedText}
+              darkColor={palette.mutedText}
+            >
+              The mobile app now shares the same palette, surface treatment,
+              shell contrast, rounded geometry, and operational tone as the web
+              app.
+            </ThemedText>
+          </View>
+
+          <View style={styles.heroActions}>
+            <View style={styles.actionWrap}>
+              <AppButton
+                label="Open preview"
+                onPress={() => router.push("/modal")}
+                icon={
+                  <MaterialIcons
+                    name="visibility"
+                    size={18}
+                    color={palette.shellText}
+                  />
+                }
+              />
+            </View>
+            <View style={styles.actionWrap}>
+              <AppButton
+                label="Browse tokens"
+                onPress={() => router.push("/explore")}
+                variant="secondary"
+                icon={
+                  <MaterialIcons
+                    name="palette"
+                    size={18}
+                    color={palette.buttonSecondaryText}
+                  />
+                }
+              />
+            </View>
+          </View>
+        </SurfacePanel>
+      }
+    >
+      <View style={styles.metricsRow}>
+        <SurfacePanel variant="inset" style={styles.metricCard}>
+          <ThemedText
+            type="eyebrow"
+            lightColor={palette.mutedText}
+            darkColor={palette.mutedText}
+          >
+            Page Surface
+          </ThemedText>
+          <ThemedText type="subtitle">Warm neutral</ThemedText>
+          <ThemedText type="mono">
+            {palette.background.toUpperCase()}
+          </ThemedText>
+        </SurfacePanel>
+        <SurfacePanel variant="inset" style={styles.metricCard}>
+          <ThemedText
+            type="eyebrow"
+            lightColor={palette.mutedText}
+            darkColor={palette.mutedText}
+          >
+            Primary Action
+          </ThemedText>
+          <ThemedText type="subtitle">Signal blue</ThemedText>
+          <ThemedText type="mono">{palette.primary.toUpperCase()}</ThemedText>
+        </SurfacePanel>
+      </View>
+
+      <SurfacePanel>
+        <ThemedText type="subtitle">Shared surface language</ThemedText>
+        <ThemedText
+          lightColor={palette.mutedText}
+          darkColor={palette.mutedText}
+        >
+          Cards use the same soft neutral stack as the dashboard, while the tab
+          shell below mirrors the dark operator chrome. Buttons, borders, and
+          status chips now all come from the same token set.
         </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.swatchRow}>
+          {[
+            { label: "Primary", color: palette.primary },
+            { label: "Accent", color: palette.accent },
+            { label: "Highlight", color: palette.highlight },
+            { label: "Shell", color: palette.shell },
+          ].map((item) => (
+            <View
+              key={item.label}
+              style={[
+                styles.swatch,
+                {
+                  backgroundColor: withAlpha(
+                    item.color,
+                    item.label === "Shell" ? 0.96 : 0.14,
+                  ),
+                  borderColor: withAlpha(
+                    item.color,
+                    item.label === "Shell" ? 0.3 : 0.24,
+                  ),
+                },
+              ]}
+            >
+              <View
+                style={[styles.swatchDot, { backgroundColor: item.color }]}
+              />
+              <ThemedText type="defaultSemiBold">{item.label}</ThemedText>
+            </View>
+          ))}
+        </View>
+      </SurfacePanel>
+    </AppShell>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  hero: {
+    gap: Spacing.lg,
+    paddingTop: Spacing.xl,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  heroTopRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  heroTitleBlock: {
+    gap: Spacing.sm,
+  },
+  heroTitle: {
+    fontSize: Typography.h1 + 2,
+    lineHeight: 40,
+  },
+  heroActions: {
+    gap: Spacing.sm,
+  },
+  actionWrap: {
+    borderRadius: Radii.button,
+    overflow: "hidden",
+  },
+  metricsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  metricCard: {
+    flex: 1,
+    gap: Spacing.xs,
+  },
+  swatchRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginTop: Spacing.lg,
+  },
+  swatch: {
+    minWidth: "46%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderRadius: Radii.button,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  swatchDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 999,
   },
 });

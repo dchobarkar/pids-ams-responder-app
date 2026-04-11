@@ -1,112 +1,123 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, View } from "react-native";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { AppShell } from "@/components/app-shell";
+import { ThemedText } from "@/components/themed-text";
+import { Collapsible } from "@/components/ui/collapsible";
+import { StatusPill } from "@/components/ui/status-pill";
+import { SurfacePanel } from "@/components/ui/surface-panel";
+import {
+  Colors,
+  Radii,
+  Spacing,
+  Typography,
+  withAlpha,
+} from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function TabTwoScreen() {
+  const theme = useColorScheme() ?? "light";
+  const palette = Colors[theme];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
+    <AppShell>
+      <SurfacePanel style={styles.hero}>
+        <StatusPill label="Design Tokens" tone="highlight" />
+        <ThemedText type="title">Shared style guide</ThemedText>
         <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
+          lightColor={palette.mutedText}
+          darkColor={palette.mutedText}
+        >
+          This tab is now a compact reference for the mobile theme system
+          derived from the web app.
         </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
+      </SurfacePanel>
+
+      <SurfacePanel>
+        <ThemedText type="subtitle">Palette</ThemedText>
+        <View style={styles.paletteGrid}>
+          {[
+            { label: "Primary", color: palette.primary },
+            { label: "Secondary", color: palette.secondary },
+            { label: "Accent", color: palette.accent },
+            { label: "Highlight", color: palette.highlight },
+            { label: "Shell", color: palette.shell },
+            { label: "Raised", color: palette.raised },
+          ].map((item) => (
+            <View key={item.label} style={styles.paletteCard}>
+              <View
+                style={[
+                  styles.paletteSwatch,
+                  {
+                    backgroundColor: item.color,
+                    borderColor: withAlpha(item.color, 0.24),
+                  },
+                ]}
+              />
+              <ThemedText type="defaultSemiBold">{item.label}</ThemedText>
+              <ThemedText type="mono">{item.color.toUpperCase()}</ThemedText>
+            </View>
+          ))}
+        </View>
+      </SurfacePanel>
+
+      <Collapsible title="Surface stack">
         <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+          Use <ThemedText type="defaultSemiBold">background</ThemedText> for
+          page chrome, <ThemedText type="defaultSemiBold">card</ThemedText> for
+          primary content containers,{" "}
+          <ThemedText type="defaultSemiBold">panel</ThemedText> for inset
+          sections, and <ThemedText type="defaultSemiBold">shell</ThemedText>{" "}
+          for navigation or operator chrome.
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
       </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
+
+      <Collapsible title="Typography">
+        <ThemedText type="title" style={styles.typeSampleTitle}>
+          Command-ready headline
+        </ThemedText>
         <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
+          Body copy stays warm, readable, and operationally calm, while{" "}
+          <ThemedText type="defaultSemiBold">eyebrows</ThemedText> and{" "}
+          <ThemedText type="mono">monospace values</ThemedText> support
+          dashboards and diagnostics.
         </ThemedText>
       </Collapsible>
-      <Collapsible title="Images">
+
+      <Collapsible title="Shape and elevation">
         <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
+          Cards use a{" "}
+          <ThemedText type="defaultSemiBold">{Radii.card}px</ThemedText> radius,
+          buttons use{" "}
+          <ThemedText type="defaultSemiBold">{Radii.button}px</ThemedText>, and
+          the tab shell carries the darker elevated treatment from the web
+          layout.
         </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
       </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    </AppShell>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  hero: {
+    gap: Spacing.md,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  paletteGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  paletteCard: {
+    width: "47%",
+    gap: Spacing.xs,
+  },
+  paletteSwatch: {
+    height: 64,
+    borderRadius: Radii.button,
+    borderWidth: 1,
+  },
+  typeSampleTitle: {
+    fontSize: Typography.h2,
+    lineHeight: 32,
   },
 });
