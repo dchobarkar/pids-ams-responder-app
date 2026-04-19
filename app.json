@@ -28,6 +28,20 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to photos for acknowledgement and verification evidence.",
+          "cameraPermission": "Allow the camera to capture evidence when needed."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Location is used for verification coordinates.",
+          "locationWhenInUsePermission": "Location is used for verification coordinates."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

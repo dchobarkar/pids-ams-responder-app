@@ -16,6 +16,8 @@ type AppShellProps = PropsWithChildren<{
   header?: ReactNode;
   scrollProps?: ScrollViewProps;
   contentStyle?: StyleProp<ViewStyle>;
+  /** Use with FlatList as child to avoid ScrollView nesting */
+  scrollable?: boolean;
 }>;
 
 export function AppShell({
@@ -23,10 +25,27 @@ export function AppShell({
   header,
   scrollProps,
   contentStyle,
+  scrollable = true,
 }: AppShellProps) {
   const backgroundColor = useThemeColor({}, "background");
   const primary = useThemeColor({}, "primary");
   const accent = useThemeColor({}, "accent");
+
+  const body = scrollable ? (
+    <ScrollView
+      {...scrollProps}
+      contentContainerStyle={[styles.content, contentStyle]}
+      showsVerticalScrollIndicator={false}
+    >
+      {header}
+      {children}
+    </ScrollView>
+  ) : (
+    <View style={[styles.listBody, contentStyle]}>
+      {header}
+      {children}
+    </View>
+  );
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor }]}>
@@ -47,14 +66,7 @@ export function AppShell({
             ]}
           />
         </View>
-        <ScrollView
-          {...scrollProps}
-          contentContainerStyle={[styles.content, contentStyle]}
-          showsVerticalScrollIndicator={false}
-        >
-          {header}
-          {children}
-        </ScrollView>
+        {body}
       </View>
     </SafeAreaView>
   );
@@ -88,6 +100,13 @@ const styles = StyleSheet.create({
     height: 220,
   },
   content: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xxl * 3,
+    gap: Spacing.lg,
+  },
+  listBody: {
+    flex: 1,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.xxl * 3,
