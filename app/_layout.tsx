@@ -4,10 +4,11 @@ import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
 import { Colors } from "@/constants/theme";
+import { AuthProvider } from "@/contexts/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  anchor: "index",
 };
 
 export default function RootLayout() {
@@ -45,19 +46,23 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={navigationTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{
-            presentation: "modal",
-            title: "Theme Preview",
-            headerStyle: { backgroundColor: palette.raised },
-            headerTintColor: palette.text,
-            headerShadowVisible: false,
-          }}
-        />
-      </Stack>
+      <AuthProvider>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options={{
+              presentation: "modal",
+              title: "Theme Preview",
+              headerStyle: { backgroundColor: palette.raised },
+              headerTintColor: palette.text,
+              headerShadowVisible: false,
+            }}
+          />
+        </Stack>
+      </AuthProvider>
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </ThemeProvider>
   );

@@ -14,12 +14,14 @@ import {
   Typography,
   withAlpha,
 } from "@/constants/theme";
+import { useAuth } from "@/contexts/auth-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function HomeScreen() {
   const theme = useColorScheme() ?? "light";
   const palette = Colors[theme];
   const router = useRouter();
+  const { user } = useAuth();
 
   return (
     <AppShell
@@ -27,27 +29,26 @@ export default function HomeScreen() {
         <SurfacePanel style={styles.hero}>
           <View style={styles.heroTopRow}>
             <StatusPill label="Responder Mobile" tone="primary" />
-            <StatusPill label="Theme Synced" tone="accent" />
+            <StatusPill label="Signed in" tone="accent" />
           </View>
 
           <View style={styles.heroTitleBlock}>
             <ThemedText type="title" style={styles.heroTitle}>
-              PIDS AMS field shell
+              Home
             </ThemedText>
             <ThemedText
               lightColor={palette.mutedText}
               darkColor={palette.mutedText}
             >
-              The mobile app now shares the same palette, surface treatment,
-              shell contrast, rounded geometry, and operational tone as the web
-              app.
+              Operational overview. GPS tracking and patrol sync will connect
+              here in later phases.
             </ThemedText>
           </View>
 
           <View style={styles.heroActions}>
             <View style={styles.actionWrap}>
               <AppButton
-                label="Open preview"
+                label="Open theme preview"
                 onPress={() => router.push("/modal")}
                 icon={
                   <MaterialIcons
@@ -60,12 +61,12 @@ export default function HomeScreen() {
             </View>
             <View style={styles.actionWrap}>
               <AppButton
-                label="Browse tokens"
-                onPress={() => router.push("/explore")}
+                label="Profile"
+                onPress={() => router.push("/(tabs)/profile")}
                 variant="secondary"
                 icon={
                   <MaterialIcons
-                    name="palette"
+                    name="person"
                     size={18}
                     color={palette.buttonSecondaryText}
                   />
@@ -76,42 +77,28 @@ export default function HomeScreen() {
         </SurfacePanel>
       }
     >
-      <View style={styles.metricsRow}>
-        <SurfacePanel variant="inset" style={styles.metricCard}>
-          <ThemedText
-            type="eyebrow"
-            lightColor={palette.mutedText}
-            darkColor={palette.mutedText}
-          >
-            Page Surface
-          </ThemedText>
-          <ThemedText type="subtitle">Warm neutral</ThemedText>
-          <ThemedText type="mono">
-            {palette.background.toUpperCase()}
-          </ThemedText>
-        </SurfacePanel>
-        <SurfacePanel variant="inset" style={styles.metricCard}>
-          <ThemedText
-            type="eyebrow"
-            lightColor={palette.mutedText}
-            darkColor={palette.mutedText}
-          >
-            Primary Action
-          </ThemedText>
-          <ThemedText type="subtitle">Signal blue</ThemedText>
-          <ThemedText type="mono">{palette.primary.toUpperCase()}</ThemedText>
-        </SurfacePanel>
-      </View>
+      <SurfacePanel variant="inset" style={styles.summary}>
+        <ThemedText
+          type="eyebrow"
+          lightColor={palette.mutedText}
+          darkColor={palette.mutedText}
+        >
+          Signed in as
+        </ThemedText>
+        <ThemedText type="subtitle">{user?.name ?? "—"}</ThemedText>
+        <ThemedText type="mono" style={styles.roleLine}>
+          {user?.role ?? ""}
+        </ThemedText>
+      </SurfacePanel>
 
       <SurfacePanel>
-        <ThemedText type="subtitle">Shared surface language</ThemedText>
+        <ThemedText type="subtitle">Next steps</ThemedText>
         <ThemedText
           lightColor={palette.mutedText}
           darkColor={palette.mutedText}
         >
-          Cards use the same soft neutral stack as the dashboard, while the tab
-          shell below mirrors the dark operator chrome. Buttons, borders, and
-          status chips now all come from the same token set.
+          Background GPS, local queue, and patrol session APIs will land per the
+          product roadmap. Mobile API v1 covers authentication and profile only.
         </ThemedText>
         <View style={styles.swatchRow}>
           {[
@@ -172,13 +159,11 @@ const styles = StyleSheet.create({
     borderRadius: Radii.button,
     overflow: "hidden",
   },
-  metricsRow: {
-    flexDirection: "row",
-    gap: Spacing.md,
-  },
-  metricCard: {
-    flex: 1,
+  summary: {
     gap: Spacing.xs,
+  },
+  roleLine: {
+    marginTop: Spacing.xs,
   },
   swatchRow: {
     flexDirection: "row",

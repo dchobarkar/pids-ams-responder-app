@@ -10,6 +10,7 @@ type AppButtonProps = {
   onPress?: () => void;
   variant?: "primary" | "secondary" | "danger";
   icon?: ReactNode;
+  disabled?: boolean;
 };
 
 export function AppButton({
@@ -17,6 +18,7 @@ export function AppButton({
   onPress,
   variant = "primary",
   icon,
+  disabled = false,
 }: AppButtonProps) {
   const primary = useThemeColor({}, "primary");
   const primaryHover = useThemeColor({}, "primaryHover");
@@ -47,13 +49,15 @@ export function AppButton({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.button,
         Shadows.button,
         {
           backgroundColor: pressed ? pressedColor : backgroundColor,
           borderColor,
+          opacity: disabled ? 0.55 : 1,
         },
       ]}
     >
