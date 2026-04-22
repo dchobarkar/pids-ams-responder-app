@@ -13,11 +13,9 @@ export async function fetchJson(
     return await fetch(input, init);
   } catch (e) {
     const base = getApiBaseUrl();
-    const corsHelp =
-      " Expo Web: either add CORS headers on your Next.js `/api/*` routes, or run `npm run dev:api-proxy` and set EXPO_PUBLIC_API_BASE_URL=http://127.0.0.1:3333";
     const hint =
       e instanceof TypeError
-        ? `Cannot reach ${base}. Is the API running on that host/port? Set EXPO_PUBLIC_API_BASE_URL if the API is elsewhere.${corsHelp} (${e.message})`
+        ? `Cannot reach configured API base ${base}. Verify EXPO_PUBLIC_API_BASE_URL, backend availability, and Expo Web CORS settings if applicable. (${e.message})`
         : e instanceof Error
           ? e.message
           : String(e);
