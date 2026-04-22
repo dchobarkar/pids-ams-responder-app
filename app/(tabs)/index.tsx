@@ -1,135 +1,172 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { type Href, useRouter } from "expo-router";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppShell } from "@/components/app-shell";
+import { NotificationBell } from "@/components/notification-bell";
 import { ThemedText } from "@/components/themed-text";
-import { AppButton } from "@/components/ui/app-button";
 import { StatusPill } from "@/components/ui/status-pill";
 import { SurfacePanel } from "@/components/ui/surface-panel";
-import {
-  Colors,
-  Radii,
-  Spacing,
-  Typography,
-  withAlpha,
-} from "@/constants/theme";
+import { Colors, Radii, Spacing, Typography } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
+import { useBootstrap } from "@/contexts/bootstrap-context";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
-export default function HomeScreen() {
+type HubItem = {
+  key: string;
+  title: string;
+  subtitle: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  href: Href;
+  supervisorOnly?: boolean;
+};
+
+const HUB: HubItem[] = [
+  {
+    key: "alarms",
+    title: "Alarms",
+    subtitle: "Active alarms and actions",
+    icon: "warning",
+    href: "/alarms",
+  },
+  {
+    key: "tasks",
+    title: "Tasks",
+    subtitle: "Your actionable worklist",
+    icon: "assignment",
+    href: "/tasks",
+  },
+  {
+    key: "assignments",
+    title: "Assignments",
+    subtitle: "Coverage across chainages",
+    icon: "supervisor-account",
+    href: "/assignments",
+    supervisorOnly: true,
+  },
+  {
+    key: "consolidated",
+    title: "Consolidated",
+    subtitle: "History-oriented view",
+    icon: "history",
+    href: "/consolidated",
+  },
+  {
+    key: "patrol",
+    title: "Patrol",
+    subtitle: "Session start / stop",
+    icon: "my-location",
+    href: "/patrol",
+  },
+  {
+    key: "notifications",
+    title: "Notifications",
+    subtitle: "In-app messages",
+    icon: "notifications",
+    href: "/notifications",
+  },
+  {
+    key: "theme",
+    title: "Theme preview",
+    subtitle: "Design tokens",
+    icon: "palette",
+    href: "/modal",
+  },
+];
+
+export default function HomeHubScreen() {
   const theme = useColorScheme() ?? "light";
   const palette = Colors[theme];
   const router = useRouter();
   const { user } = useAuth();
+  const { data: bootstrap, error: bootError, refresh } = useBootstrap();
+  const isSupervisor = user?.role === "SUPERVISOR";
+
+  const items = HUB.filter((h) => !h.supervisorOnly || isSupervisor);
 
   return (
     <AppShell
       header={
         <SurfacePanel style={styles.hero}>
           <View style={styles.heroTopRow}>
-            <StatusPill label="Responder Mobile" tone="primary" />
-            <StatusPill label="Signed in" tone="accent" />
+            <StatusPill label="Home" tone="primary" />
+            <NotificationBell />
           </View>
-
           <View style={styles.heroTitleBlock}>
             <ThemedText type="title" style={styles.heroTitle}>
-              Home
+              {user?.role ?? "Responder"}
             </ThemedText>
             <ThemedText
               lightColor={palette.mutedText}
               darkColor={palette.mutedText}
             >
-              Operational overview. GPS tracking and patrol sync will connect
-              here in later phases.
+              Open a section — everything else uses stack navigation (no extra
+              tab bar clutter).
             </ThemedText>
           </View>
-
-          <View style={styles.heroActions}>
-            <View style={styles.actionWrap}>
-              <AppButton
-                label="Open theme preview"
-                onPress={() => router.push("/modal")}
-                icon={
-                  <MaterialIcons
-                    name="visibility"
-                    size={18}
-                    color={palette.shellText}
-                  />
-                }
-              />
+          {bootError ? (
+            <View style={styles.bootErr}>
+              <ThemedText style={{ color: palette.highlight }}>
+                {bootError}
+              </ThemedText>
+              <Pressable onPress={() => void refresh()}>
+                <ThemedText
+                  type="defaultSemiBold"
+                  style={{ color: palette.primary }}
+                >
+                  Retry
+                </ThemedText>
+              </Pressable>
             </View>
-            <View style={styles.actionWrap}>
-              <AppButton
-                label="Profile"
-                onPress={() => router.push("/(tabs)/profile")}
-                variant="secondary"
-                icon={
-                  <MaterialIcons
-                    name="person"
-                    size={18}
-                    color={palette.buttonSecondaryText}
-                  />
-                }
-              />
-            </View>
-          </View>
+          ) : null}
+          {bootstrap?.unreadNotificationCount != null ? (
+            <ThemedText
+              lightColor={palette.mutedText}
+              darkColor={palette.mutedText}
+            >
+              Unread notifications: {bootstrap.unreadNotificationCount}
+            </ThemedText>
+          ) : null}
         </SurfacePanel>
       }
     >
-      <SurfacePanel variant="inset" style={styles.summary}>
-        <ThemedText
-          type="eyebrow"
-          lightColor={palette.mutedText}
-          darkColor={palette.mutedText}
-        >
-          Signed in as
-        </ThemedText>
-        <ThemedText type="subtitle">{user?.name ?? "—"}</ThemedText>
-        <ThemedText type="mono" style={styles.roleLine}>
-          {user?.role ?? ""}
-        </ThemedText>
-      </SurfacePanel>
-
-      <SurfacePanel>
-        <ThemedText type="subtitle">Next steps</ThemedText>
-        <ThemedText
-          lightColor={palette.mutedText}
-          darkColor={palette.mutedText}
-        >
-          Background GPS, local queue, and patrol session APIs will land per the
-          product roadmap. Mobile API v1 covers authentication and profile only.
-        </ThemedText>
-        <View style={styles.swatchRow}>
-          {[
-            { label: "Primary", color: palette.primary },
-            { label: "Accent", color: palette.accent },
-            { label: "Highlight", color: palette.highlight },
-            { label: "Shell", color: palette.shell },
-          ].map((item) => (
-            <View
-              key={item.label}
-              style={[
-                styles.swatch,
-                {
-                  backgroundColor: withAlpha(
-                    item.color,
-                    item.label === "Shell" ? 0.96 : 0.14,
-                  ),
-                  borderColor: withAlpha(
-                    item.color,
-                    item.label === "Shell" ? 0.3 : 0.24,
-                  ),
-                },
-              ]}
-            >
-              <View
-                style={[styles.swatchDot, { backgroundColor: item.color }]}
-              />
-              <ThemedText type="defaultSemiBold">{item.label}</ThemedText>
+      <View style={styles.grid}>
+        {items.map((item) => (
+          <Pressable
+            key={item.key}
+            onPress={() => router.push(item.href)}
+            style={({ pressed }) => [
+              styles.card,
+              {
+                opacity: pressed ? 0.85 : 1,
+                borderColor: palette.border,
+                backgroundColor: palette.card,
+              },
+            ]}
+          >
+            <MaterialIcons name={item.icon} size={28} color={palette.primary} />
+            <View style={styles.cardText}>
+              <ThemedText type="defaultSemiBold">{item.title}</ThemedText>
+              <ThemedText
+                lightColor={palette.mutedText}
+                darkColor={palette.mutedText}
+              >
+                {item.subtitle}
+              </ThemedText>
             </View>
-          ))}
-        </View>
+            <MaterialIcons
+              name="chevron-right"
+              size={22}
+              color={palette.mutedText}
+            />
+          </Pressable>
+        ))}
+      </View>
+
+      <SurfacePanel variant="inset">
+        <ThemedText type="eyebrow">Signed in as</ThemedText>
+        <ThemedText type="subtitle">{user?.name ?? "—"}</ThemedText>
+        <ThemedText type="mono">{user?.email ?? ""}</ThemedText>
       </SurfacePanel>
     </AppShell>
   );
@@ -137,13 +174,13 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   hero: {
-    gap: Spacing.lg,
+    gap: Spacing.md,
     paddingTop: Spacing.xl,
   },
   heroTopRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   heroTitleBlock: {
     gap: Spacing.sm,
@@ -152,38 +189,22 @@ const styles = StyleSheet.create({
     fontSize: Typography.h1 + 2,
     lineHeight: 40,
   },
-  heroActions: {
+  grid: {
     gap: Spacing.sm,
   },
-  actionWrap: {
-    borderRadius: Radii.button,
-    overflow: "hidden",
-  },
-  summary: {
-    gap: Spacing.xs,
-  },
-  roleLine: {
-    marginTop: Spacing.xs,
-  },
-  swatchRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  swatch: {
-    minWidth: "46%",
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
+    gap: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: Radii.card,
     borderWidth: 1,
-    borderRadius: Radii.button,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
   },
-  swatchDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 999,
+  cardText: {
+    flex: 1,
+    gap: 4,
+  },
+  bootErr: {
+    gap: Spacing.xs,
   },
 });

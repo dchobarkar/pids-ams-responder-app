@@ -10,10 +10,12 @@ import React, {
 } from "react";
 import { Platform } from "react-native";
 
+import type { AuthFetchDeps } from "@/lib/api/authenticated-fetch";
+import { ApiError } from "@/lib/api/errors";
 import {
-  getProfileWithRetry,
+  getProfile,
   postLogin,
-  postLogoutWithRetry,
+  postLogout,
   postRefresh,
 } from "@/lib/api/mobile-v1";
 import type { MobileUser } from "@/lib/api/types";
@@ -35,9 +37,24 @@ type AuthContextValue = {
   refreshProfile: () => Promise<void>;
   /** Used after 401 to rotate tokens and return new access token, or null if signed out */
   refreshAccessToken: () => Promise<string | null>;
+  /** Valid access token, refreshing if near expiry */
+  getValidAccessToken: () => Promise<string | null>;
+  /** Pass into API modules for authenticated requests */
+  getApiDeps: () => AuthFetchDeps;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+/** Only clear session when the server rejects the refresh token — not on network blips. */
+function shouldInvalidateSessionOnRefreshFailure(e: unknown): boolean {
+  if (!(e instanceof ApiError)) {
+    return false;
+  }
+  if (e.code === "NETWORK") {
+    return false;
+  }
+  return e.status === 401 || e.code === "UNAUTHORIZED";
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
@@ -67,13 +84,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: data.user,
       });
       return data.accessToken;
-    } catch {
-      accessTokenRef.current = null;
-      refreshTokenRef.current = null;
-      expiresAtRef.current = null;
-      setUser(null);
-      await clearSession();
-      setStatus("signedOut");
+    } catch (e) {
+      if (shouldInvalidateSessionOnRefreshFailure(e)) {
+        accessTokenRef.current = null;
+        refreshTokenRef.current = null;
+        expiresAtRef.current = null;
+        setUser(null);
+        await clearSession();
+        setStatus("signedOut");
+      }
       return null;
     }
   }, []);
@@ -139,16 +158,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user: data.user,
         });
         setStatus("signedIn");
-      } catch {
+      } catch (e) {
         if (cancelled) {
           return;
         }
-        await clearSession();
-        refreshTokenRef.current = null;
-        accessTokenRef.current = null;
-        expiresAtRef.current = null;
-        setUser(null);
-        setStatus("signedOut");
+        if (shouldInvalidateSessionOnRefreshFailure(e)) {
+          await clearSession();
+          refreshTokenRef.current = null;
+          accessTokenRef.current = null;
+          expiresAtRef.current = null;
+          setUser(null);
+          setStatus("signedOut");
+        } else {
+          setStatus("signedIn");
+        }
       }
     }
 
@@ -187,10 +210,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    const access = accessTokenRef.current;
-    if (access) {
+    if (accessTokenRef.current) {
       try {
-        await postLogoutWithRetry(access, refreshAccessTokenInner);
+        await postLogout({
+          getValidAccessToken: ensureValidAccessToken,
+          refreshAccessToken: refreshAccessTokenInner,
+        });
       } catch {
         // Still clear local session
       }
@@ -201,14 +226,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     await clearSession();
     setStatus("signedOut");
-  }, [refreshAccessTokenInner]);
+  }, [ensureValidAccessToken, refreshAccessTokenInner]);
 
   const refreshProfile = useCallback(async () => {
     const token = await ensureValidAccessToken();
     if (!token) {
       return;
     }
-    const res = await getProfileWithRetry(token, refreshAccessTokenInner);
+    const res = await getProfile({
+      getValidAccessToken: ensureValidAccessToken,
+      refreshAccessToken: refreshAccessTokenInner,
+    });
     setUser(res.user);
     const exp = expiresAtRef.current;
     const rt = refreshTokenRef.current;
@@ -222,6 +250,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [ensureValidAccessToken, refreshAccessTokenInner]);
 
+  const getApiDeps = useCallback(
+    (): AuthFetchDeps => ({
+      getValidAccessToken: ensureValidAccessToken,
+      refreshAccessToken: refreshAccessTokenInner,
+    }),
+    [ensureValidAccessToken, refreshAccessTokenInner],
+  );
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -230,8 +266,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshProfile,
       refreshAccessToken,
+      getValidAccessToken: ensureValidAccessToken,
+      getApiDeps,
     }),
-    [status, user, signIn, signOut, refreshProfile, refreshAccessToken],
+    [
+      status,
+      user,
+      signIn,
+      signOut,
+      refreshProfile,
+      refreshAccessToken,
+      ensureValidAccessToken,
+      getApiDeps,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
